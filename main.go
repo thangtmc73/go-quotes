@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"net/http"
 	"os"
 )
 
@@ -16,7 +17,9 @@ type Quote struct {
 const quoteURL = "https://gist.githubusercontent.com/thangtmc73/aefb6536e4869f89e914e7c70b0269c3/raw/94c565c0932c4a25180fcba6e3bfdfed6c6b07cf/go_quotes.json"
 
 func main() {
-	quotes, err := getQuotesFromLocalJSON("default_quotes.json")
+	//quotes, err := getQuotesFromLocalJSON("default_quotes.json")
+	quotes, err := getQuotesFromURL(quoteURL)
+
 	if err != nil {
 		fmt.Println("Could not get quotes from local JSON", err)
 	}
@@ -43,6 +46,22 @@ func getQuotesFromLocalJSON(filePath string) ([]Quote, error) {
 	}
 	byteValue, _ := io.ReadAll(jsonFile)
 	if parseErr := json.Unmarshal(byteValue, &quotes); parseErr != nil {
+		return quotes, parseErr
+	}
+	return quotes, nil
+}
+
+func getQuotesFromURL(url string) ([]Quote, error) {
+	var quotes []Quote
+	resp, err := http.Get(url)
+	if err != nil {
+		return quotes, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return quotes, err
+	}
+	if parseErr := json.Unmarshal(body, &quotes); parseErr != nil {
 		return quotes, parseErr
 	}
 	return quotes, nil
